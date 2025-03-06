@@ -16,7 +16,7 @@
 #include <bitset>
 #include <iostream>
 #include <sstream>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 using namespace std;
