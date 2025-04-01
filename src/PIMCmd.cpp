@@ -11,9 +11,45 @@
  **************************************************************************************************/
 
 #include "PIMCmd.h"
+#include <stdexcept>
+#include <string>
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 namespace DRAMSim
 {
+
+NLOHMANN_JSON_SERIALIZE_ENUM( PIMCmdType, {
+    {PIMCmdType::NOP, "NOP"},
+    {PIMCmdType::ADD, "ADD"},
+    {PIMCmdType::MUL, "MUL"},
+    {PIMCmdType::MAC, "MAC"},
+    {PIMCmdType::MAD, "MAD"},
+    {PIMCmdType::REV0, "REV0"},
+    {PIMCmdType::REV1, "REV1"},
+    {PIMCmdType::REV2, "REV2"},
+    {PIMCmdType::MOV, "MOV"},
+    {PIMCmdType::FILL, "FILL"},
+    {PIMCmdType::REV3, "REV3"},
+    {PIMCmdType::REV4, "REV4"},
+    {PIMCmdType::REV5, "REV5"},
+    {PIMCmdType::REV6, "REV6"},
+    {PIMCmdType::JUMP, "JUMP"},
+    {PIMCmdType::EXIT, "EXIT"}
+})
+
+NLOHMANN_JSON_SERIALIZE_ENUM( PIMOpdType, {
+    {PIMOpdType::A_OUT, "A_OUT"},
+    {PIMOpdType::M_OUT, "M_OUT"},
+    {PIMOpdType::EVEN_BANK, "EVEN_BANK"},
+    {PIMOpdType::ODD_BANK, "ODD_BANK"},
+    {PIMOpdType::GRF_A, "GRF_A"},
+    {PIMOpdType::GRF_B, "GRF_B"},
+    {PIMOpdType::SRF_M, "SRF_M"},
+    {PIMOpdType::SRF_A, "SRF_A"}
+})
+
 bool operator==(const PIMCmd& lhs, const PIMCmd& rhs)
 {
     return lhs.toInt() == rhs.toInt();
@@ -196,4 +232,20 @@ std::string PIMCmd::toStr() const
     }
     return ss.str();
 }
+
+void to_json(json& j, const PIMCmd& p) {
+    j = json{{"type_", p.type_},
+    {"dst_", p.dst_},
+    {"src0_", p.src0_},
+    {"src1_", p.src1_},
+    {"src2_", p.src2_},
+    {"loopCounter_", p.loopCounter_},
+    {"loopOffset_", p.loopOffset_},
+    {"isAuto_", p.isAuto_},
+    {"dstIdx_", p.dstIdx_},
+    {"src0Idx_", p.src0Idx_},
+    {"src1Idx_", p.src1Idx_},
+    {"isRelu_", p.isRelu_}};
+}
+
 }  // namespace DRAMSim

@@ -18,6 +18,7 @@
 #include <sstream>
 #include <cstdint>
 #include <string>
+#include <json_fwd.hpp>
 
 using namespace std;
 
@@ -54,6 +55,8 @@ enum class PIMOpdType
     SRF_M,
     SRF_A
 };
+
+PIMCmdType CmdFromString(char *s);
 
 class PIMCmd
 {
@@ -181,7 +184,7 @@ class PIMCmd
         return ((val >> bit_pos) & bitmask(bit_len));
     }
 
-    std::string opdToStr(PIMOpdType opd, int idx = 0) const
+    static std::string opdToStr(PIMOpdType opd, int idx = 0)
     {
         switch (opd)
         {
@@ -206,9 +209,9 @@ class PIMCmd
         }
     }
 
-    std::string cmdToStr(PIMCmdType type) const
+    static std::string cmdToStr(PIMCmdType type)
     {
-        switch (type_)
+        switch (type)
         {
             case PIMCmdType::EXIT:
                 return "EXIT";
@@ -241,6 +244,9 @@ class PIMCmd
 
 bool operator==(const PIMCmd& lhs, const PIMCmd& rhs);
 bool operator!=(const PIMCmd& lhs, const PIMCmd& rhs);
+
+void to_json(nlohmann::json& j, const PIMCmd& p);
+void from_json(const nlohmann::json& j, PIMCmd& p);
 
 }  // namespace DRAMSim
 #endif
