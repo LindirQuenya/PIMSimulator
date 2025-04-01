@@ -38,6 +38,8 @@ def getSources(target):
 def build(target_name, base_path, build_flags):
     # setup the default build envronments
     env = Environment()
+    env.Tool('compilation_db')
+    env.CompilationDatabase()
 
     env.Append(CXXFLAGS=build_flags["CXXFLAGS"] + build_flags["gprof_option"])
     env.Append(LINKFLAGS=build_flags["LINKFLAGS"] + build_flags["gprof_option"])
