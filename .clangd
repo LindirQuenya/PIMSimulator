@@ -1,0 +1,13 @@
+If:
+  PathMatch: src/debugger/.*
+
+CompileFlags:
+  CompilationDatabase: src/debugger
+
+---
+
+If:
+  PathExclude: src/debugger/.*
+
+CompileFlags:
+  CompilationDatabase: .
