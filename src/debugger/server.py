@@ -31,8 +31,18 @@ class GDB_SERVER(object):
     def close_socket(self):
         self.sock.close()
     def parser(self):
-        if self.stage != 1: #do not enter parser mode
-            pass
+        data = self.sock.recv(4096)
+        if data[1] == "?":
+            reply = "+" + "SO5 " #specifies that a breakpoint is getting handled
+            self.sock.send(reply)
+        elif data[1] == "g" or data[1] == "G": #register access
+            
+        elif data[1] == "c" or "vCont" in data: #continue command
+        elif data[1] == "s": #step command
+        elif data[1] == "m" or data[1] == "M": #memory access
+            reply = "+" + 
         else:
-            self.stage = 2
-            pass
+            print("Command is not supported... Please check for the next update")
+            reply = "+" + "E.errtext" #returns error message
+            self.sock.send(reply)
+            return 
