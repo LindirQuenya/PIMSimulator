@@ -22,7 +22,11 @@ class GDB_SERVER(object):
                 raise RuntimeError("No data is being received, Something went wrong --> GDB server not sending constant stream of message")
         print(F"Data received: {data}")  
         self.stage = 1  
-
+    def continuous_send(self):
+        data = self.sock.recv()
+        if  "<-:" in data:
+            buf = "->:+$#00"
+            self.sock.send(buf.encode())
 
     def close_socket(self):
         self.sock.close()
@@ -30,4 +34,5 @@ class GDB_SERVER(object):
         if self.stage != 1: #do not enter parser mode
             pass
         else:
+            self.stage = 2
             pass
