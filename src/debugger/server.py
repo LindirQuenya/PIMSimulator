@@ -9,6 +9,7 @@ class GDB_SERVER(object):
         self.sock.setsockopt(level=socket.SOL_SOCKET, option_name=socket.SO_KEEPALIVE)
         self.sock.settimeout(15)
         self.sock.bind((socket.gethostbyaddr(), port)) #used socket documentation
+        self.stage = 0
         #self.data = " "
     def receiver(self):
         data = self.data
@@ -19,9 +20,14 @@ class GDB_SERVER(object):
         else: 
             if data == " " or data == b'':
                 raise RuntimeError("No data is being received, Something went wrong --> GDB server not sending constant stream of message")
-        print(F"Data received: {data}")    
+        print(F"Data received: {data}")  
+        self.stage = 1  
 
 
     def close_socket(self):
         self.sock.close()
-    def parser():
+    def parser(self):
+        if self.stage != 1: #do not enter parser mode
+            pass
+        else:
+            pass
