@@ -58,9 +58,13 @@ class GDB_SERVER(object):
         temp.to_bytes(NUMBER_OF_BYTES, byteorder='little')
         print(F" registers printed out from 0 to {COUNT}: {temp}")
         return temp
-    def read_memory(self):
+    def read_memory(self,data):
+        print("Memory Read Occurs")
         pass
-    def write_memory(self):
+    def write_memory(self,data):
+        print("Memory Write occured")
+        reply = "E01 "
+        return reply
         pass
     def update_pc(self,address):
         self.program_counter = address + PC_INCREMENTOR
@@ -95,7 +99,7 @@ class GDB_SERVER(object):
         elif command == "m" or command[1] == "M": #memory access
             print("Memory access initiated") 
             if command[1] == 'm':
-                reply = self.read_memory()
+                reply = self.read_memory(data)
             else:
                 reply = self.write_memory()
         else:
