@@ -1,5 +1,6 @@
 import socket
 import signal #for hanlding an interrupt to end gdb server
+import json
 COUNT = 16
 NUMBER_OF_BYTES = COUNT/8
 brk_pnt_reply = "+SO5 "
@@ -34,12 +35,12 @@ class GDB_SERVER(object):
                 raise RuntimeError("No data is being received, Something went wrong --> GDB server not sending constant stream of message")
         print("Data received:")
         print(data)  
-        self.stage = 1  
+        self.stage = 1     
     def continuous_send(self):
         data = self.sock.recv()
         if  "<-:" in data:
             buf = "->:+$#00"
-            self.sock.send(buf.encode())
+            self.conn.send(buf.encode())
 
     def close_socket(self):
         self.sock.close()
@@ -73,25 +74,24 @@ class GDB_SERVER(object):
         self.update_pc(address)
         print(F"step over --> increment the address value to now be: {self.program_counter}")
         return brk_pnt_reply
-    def parser(self):
-        data = self.conn.recv(4096).decode()
+    def intermediate_step(self,data):
         print(f"<-:{data}")
-        if data[0] == "+":
+        if data == "+":
             return
-        if data[1] == "?":
+        if data == "?":
             print("Pseudo Breakpoint Setting\n")
             reply = "+" + "SO5 " #specifies that a breakpoint is getting handled
-        elif data[1] == "g" or data[1] == "G": #register access
+        elif data == "g" or data == "G": #register access
             print("Register Reads Initiated \n")
             temp_reply = self.register_read()
             reply = "+" + str(temp_reply) + ''            
-        elif data[1] == "c": #continue command
+        elif data == "c": #continue command
             print("Continue Command Initiated\n")
             reply = self.handle_step(data)
-        elif data[1] == "s": #step command
+        elif data == "s": #step command
             print("STEP Command initiated\n")
             reply = self.handle_continue(data)
-        elif data[1] == "m" or data[1] == "M": #memory access
+        elif data == "m" or data[1] == "M": #memory access
             print("Memory access initiated") 
             if data[1] == 'm':
                 reply = self.read_memory()
@@ -101,8 +101,16 @@ class GDB_SERVER(object):
             print("Command is not supported... Please check for the next update")
             reply = "+" + "E.errtext" #returns error message
         print(f"->:{reply}")
+        return reply
+    def parser(self):
+        temp_data = self.conn.recv(4096).decode()
+        print(f"Data received over socket: {temp_data}")
+        json_data = json.dumps(temp_data)
+        print(f"JSON Dumps: {json_data}")
+        data =  json_data.get("type")
+        print(f"Data being sent to intermediate step: {data}")
+        reply = self.intermediate_step(data)
         self.conn.send(reply.encode())
-
 
 
 #RUNNING THE TESTING CODE:
