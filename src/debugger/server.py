@@ -2,7 +2,7 @@ import socket
 import signal #for hanlding an interrupt to end gdb server
 import json
 COUNT = 16
-NUMBER_OF_BYTES = COUNT/8
+NUMBER_OF_BYTES = COUNT
 brk_pnt_reply = "+SO5 "
 PC_INCREMENTOR = 4
 def test():
@@ -45,9 +45,10 @@ class GDB_SERVER(object):
     def close_socket(self):
         self.sock.close()
     def register_read(self):
+        return "xx"*COUNT
         temp = []
         for i in range(COUNT):
-            temp.insert(i)
+            temp.append(i)
     #code from Matsuo
         self.hi = 0
         self.lo = 0
@@ -89,7 +90,7 @@ class GDB_SERVER(object):
         elif command == "g" or command == "G": #register access
             print("Register Reads Initiated \n")
             temp_reply = self.register_read()
-            reply = "+" + str(temp_reply) + ''            
+            reply = str(temp_reply)
         elif command == "c": #continue command
             print("Continue Command Initiated\n")
             reply = self.handle_step(command)
@@ -98,7 +99,7 @@ class GDB_SERVER(object):
             reply = self.handle_continue(command)
         elif command == "m" or command[1] == "M": #memory access
             print("Memory access initiated") 
-            if command[1] == 'm':
+            if command == 'm':
                 reply = self.read_memory(data)
             else:
                 reply = self.write_memory()
@@ -112,8 +113,8 @@ class GDB_SERVER(object):
     def parser(self):
         temp_data = self.conn.recv(4096).decode()
         print(f"Data received over socket: {temp_data}")
-        temp_json_data = json.dumps(temp_data) #if it fails, take this line and the next line out
-        json_data = json.loads(temp_json_data)
+        #temp_json_data = json.dumps(temp_data) #if it fails, take this line and the next line out
+        json_data = json.loads(temp_data)
         print(f"JSON Dumps: {json_data}")
         command =  json_data.get("type")
         data = json_data.get("data")
