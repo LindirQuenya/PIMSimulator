@@ -23,7 +23,9 @@ class GDB_SERVER(object):
         else: 
             if data == " " or data == b'':
                 raise RuntimeError("No data is being received, Something went wrong --> GDB server not sending constant stream of message")
-        print(F"Data received: {data}")  
+        	pass
+	print("Data received:")
+	print(data)  
         self.stage = 1  
     def continuous_send(self):
         data = self.sock.recv()
