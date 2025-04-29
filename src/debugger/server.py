@@ -4,6 +4,10 @@ COUNT = 16
 NUMBER_OF_BYTES = COUNT/8
 brk_pnt_reply = "+SO5 "
 PC_INCREMENTOR = 4
+def test():
+    test_server = GDB_SERVER()
+    while True:
+        GDB_SERVER.parser()
 class GDB_SERVER(object):
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -94,3 +98,8 @@ class GDB_SERVER(object):
             reply = "+" + "E.errtext" #returns error message
             self.sock.send(reply)
             return 
+
+
+
+#RUNNING THE TESTING CODE:
+test()
