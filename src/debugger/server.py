@@ -5,19 +5,24 @@ NUMBER_OF_BYTES = COUNT/8
 brk_pnt_reply = "+SO5 "
 PC_INCREMENTOR = 4
 def test():
-    test_server = GDB_SERVER()
-    while True:
-        GDB_SERVER.parser()
+    with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as s:
+        test_server = GDB_SERVER(s)
+        while True:
+            test_server.parser()
 class GDB_SERVER(object):
-    def __init__(self):
-        self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    def __init__(self, sock):
+        self.sock = sock
         port = input("GDB Socket Port Target:")
         port = int(port)
-        self.sock.setsockopt(level=socket.SOL_SOCKET, option_name=socket.SO_KEEPALIVE)
+        # Unsure if this is correct, but trying it out!
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.settimeout(15)
-        self.sock.bind((socket.gethostbyaddr(), port)) #used socket documentation
+        self.sock.bind(("127.0.0.1", port)) #used socket documentation
         self.stage = 0
         #self.data = " "
+        self.sock.listen(2)
+        self.conn, self.addr = self.sock.accept()
     def receiver(self):
         data = self.data
         try:
@@ -69,35 +74,34 @@ class GDB_SERVER(object):
         print(F"step over --> increment the address value to now be: {self.program_counter}")
         return brk_pnt_reply
     def parser(self):
-        data = self.sock.recv(4096)
+        data = self.conn.recv(4096).decode()
+        print(f"<-:{data}")
+        if data[0] == "+":
+            return
         if data[1] == "?":
             print("Pseudo Breakpoint Setting\n")
             reply = "+" + "SO5 " #specifies that a breakpoint is getting handled
-            self.sock.send(reply)
         elif data[1] == "g" or data[1] == "G": #register access
             print("Register Reads Initiated \n")
             temp_reply = self.register_read()
             reply = "+" + str(temp_reply) + ''            
-        elif data[1] == "c" or "vCont" in data: #continue command
+        elif data[1] == "c": #continue command
             print("Continue Command Initiated\n")
             reply = self.handle_step(data)
-            self.sock.send(reply)
         elif data[1] == "s": #step command
             print("STEP Command initiated\n")
             reply = self.handle_continue(data)
-            self.sock.send(reply)
         elif data[1] == "m" or data[1] == "M": #memory access
             print("Memory access initiated") 
             if data[1] == 'm':
                 reply = self.read_memory()
             else:
                 reply = self.write_memory()
-            self.sock.send(reply) 
         else:
             print("Command is not supported... Please check for the next update")
             reply = "+" + "E.errtext" #returns error message
-            self.sock.send(reply)
-            return 
+        print(f"->:{reply}")
+        self.conn.send(reply.encode())
 
 
 
