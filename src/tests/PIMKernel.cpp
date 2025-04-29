@@ -16,6 +16,8 @@
 #include <string>
 
 #include "AddressMapping.h"
+#include "PIMCmd.h"
+#include "SystemConfiguration.h"
 #include "tests/PIMCmdGen.h"
 
 void PIMKernel::runPIM()
@@ -519,6 +521,31 @@ void PIMKernel::executeEltwise(int dim, pimBankType pb_type, KernelType ktype, i
        else if (ktype == KernelType::BN)
        computeBn(num_tile, input0_row, result_row);
      */
+
+    changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
+    changePIMMode(dramMode::HAB, dramMode::SB);
+    parkOut();
+}
+
+void PIMKernel::executeUntilBP(vector<PIMCmd> pim_cmds, int bp_index) {
+    vector<PIMCmd> temp;
+    auto pb_type = pimBankType::ALL_BANK;
+    for (int i = 0; i < bp_index && i < pim_cmds.size(); i++) {
+        temp.push_back(pim_cmds[i]);
+    }
+    temp.push_back(PIMCmd(PIMCmdType::MOV,PIMOpdType::EVEN_BANK,PIMOpdType::GRF_A));
+    temp.push_back(PIMCmd(PIMCmdType::MOV,PIMOpdType::ODD_BANK,PIMOpdType::GRF_B));
+    temp.push_back(PIMCmd(PIMCmdType::EXIT, 0));
+    
+    setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
+    setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
+
+    parkIn();
+    changePIMMode(dramMode::SB, dramMode::HAB);
+    programCrf(pim_cmds);
+    changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
+
+    computeAddOrMul(num_tile, input0_row, result_row, input1_row);
 
     changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
     changePIMMode(dramMode::HAB, dramMode::SB);
