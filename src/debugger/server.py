@@ -23,9 +23,8 @@ class GDB_SERVER(object):
         else: 
             if data == " " or data == b'':
                 raise RuntimeError("No data is being received, Something went wrong --> GDB server not sending constant stream of message")
-        	pass
-	print("Data received:")
-	print(data)  
+        print("Data received:")
+        print(data)  
         self.stage = 1  
     def continuous_send(self):
         data = self.sock.recv()
@@ -45,7 +44,7 @@ class GDB_SERVER(object):
         self.bad_address = 0
         self.cause_of_bad_address = 0
         self.program_counter = 0x10000
-        self.temp.insert([hi,lo,bad_address,cause_of_bad_address,program_counter])
+        self.temp.insert([self.hi,self.lo,self.bad_address,self.cause_of_bad_address,self.program_counter])
         temp.to_bytes(NUMBER_OF_BYTES, byteorder='little')
         print(F" registers printed out from 0 to {COUNT}: {temp}")
         return temp
