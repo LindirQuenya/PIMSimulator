@@ -108,13 +108,13 @@ class GDB_SERVER(object):
     def parser(self):
         temp_data = self.conn.recv(4096).decode()
         print(f"Data received over socket: {temp_data}")
-        temp_json_data = json.dumps(temp_data)
+        temp_json_data = json.dumps(temp_data) #if it fails, take this line and the next line out
         json_data = json.loads(temp_json_data)
         print(f"JSON Dumps: {json_data}")
         command =  json_data.get("type")
         data = json_data.get("data")
         print(f"Data being sent to intermediate step: {command}")
-        reply = self.intermediate_step(command,data)
+        reply = json.dumps(self.intermediate_step(command,data))
         self.conn.send(reply.encode())
 
 
