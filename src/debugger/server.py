@@ -74,42 +74,47 @@ class GDB_SERVER(object):
         self.update_pc(address)
         print(F"step over --> increment the address value to now be: {self.program_counter}")
         return brk_pnt_reply
-    def intermediate_step(self,data):
-        print(f"<-:{data}")
-        if data == "+":
+    def intermediate_step(self,command,data):
+        print(f"<-:{command}")
+        status = "ok"
+        if command == "+":
             return
-        if data == "?":
+        if command == "?":
             print("Pseudo Breakpoint Setting\n")
             reply = "+" + "SO5 " #specifies that a breakpoint is getting handled
-        elif data == "g" or data == "G": #register access
+        elif command == "g" or command == "G": #register access
             print("Register Reads Initiated \n")
             temp_reply = self.register_read()
             reply = "+" + str(temp_reply) + ''            
-        elif data == "c": #continue command
+        elif command == "c": #continue command
             print("Continue Command Initiated\n")
-            reply = self.handle_step(data)
-        elif data == "s": #step command
+            reply = self.handle_step(command)
+        elif command == "s": #step command
             print("STEP Command initiated\n")
-            reply = self.handle_continue(data)
-        elif data == "m" or data[1] == "M": #memory access
+            reply = self.handle_continue(command)
+        elif command == "m" or command[1] == "M": #memory access
             print("Memory access initiated") 
-            if data[1] == 'm':
+            if command[1] == 'm':
                 reply = self.read_memory()
             else:
                 reply = self.write_memory()
         else:
+            status = "NOT OKAY"
             print("Command is not supported... Please check for the next update")
             reply = "+" + "E.errtext" #returns error message
-        print(f"->:{reply}")
-        return reply
+        print(f"->:{reply} & {status}")
+        transmit_information = {"status":status , "data":reply}
+        return transmit_information
     def parser(self):
         temp_data = self.conn.recv(4096).decode()
         print(f"Data received over socket: {temp_data}")
-        json_data = json.dumps(temp_data)
+        temp_json_data = json.dumps(temp_data)
+        json_data = json.loads(temp_json_data)
         print(f"JSON Dumps: {json_data}")
-        data =  json_data.get("type")
-        print(f"Data being sent to intermediate step: {data}")
-        reply = self.intermediate_step(data)
+        command =  json_data.get("type")
+        data = json_data.get("data")
+        print(f"Data being sent to intermediate step: {command}")
+        reply = self.intermediate_step(command,data)
         self.conn.send(reply.encode())
 
 
