@@ -1,6 +1,7 @@
 import socket
 import signal #for hanlding an interrupt to end gdb server
 import json
+import function_api as api
 COUNT = 16
 NUMBER_OF_BYTES = COUNT
 brk_pnt_reply = "+SO5 "
@@ -44,18 +45,20 @@ class GDB_SERVER(object):
 
     def close_socket(self):
         self.sock.close()
-    def register_read(data):
+    def register_read(index):
         bank = "GRF_B"
-        if data <= 15:
+        if index <= 15:
             bank = "GRF_A"
-        print("Register {data} corresponding to {bank} is being read from") #tells you the bank being read from
-        return read_register(data) #api function 
-    def read_memory(self,data):
-        print(f"Memory Read Occurs at address {data}")
-        return readbyte(data)
+        read_value = api.read_register(index) #api function 
+        print("Register {index} corresponding to {bank} is being read from is {read_value}") #tells you the bank being read from
+        return read_value #api function 
+    def read_memory(self,address):
+        mem_read = api.read_byte(address)
+        print(f"Memory Read Occurs at address {address} as {mem_read}")
+        return mem_read
     def write_memory(self,data):
-        print("Memory Write occured")
-        writebyte(data) #if we want to write a byte to memory
+        status = api.write_byte(data) #if we want to write a byte to memory
+        print(f"Memory Write occured {status}")
         reply = "E01 " #states that things were successful in writing to memory
         return reply
     def update_pc(self,address):
