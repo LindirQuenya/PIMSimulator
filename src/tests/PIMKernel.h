@@ -103,7 +103,9 @@ class PIMKernel
 
     void readResult(BurstType* resultBst, pimBankType bank_types, int output_dim,
                     uint64_t baseAddr = 0, unsigned startingRow = 0, unsigned startingCol = 0);
-    void readData(BurstType* bst_data, size_t bst_cnt, unsigned s_row = 0, unsigned s_col = 0);
+    void readData(BurstType* bst_data, size_t bst_cnt, unsigned s_row = 0, unsigned s_col = 0, unsigned b = 0);
+    void writeData(BurstType* bst_data, size_t bst_cnt, unsigned s_row = 0, unsigned s_col = 0, unsigned b = 0);
+    void singleStep(PIMCmd command, pimBankType pb_type, int n_cycles, int in1_row = 1, int pimreg_row = 0);
     void adderTree(BurstType* result, int output_dim, int numTile, int step, fp16* temp);
 
   private:

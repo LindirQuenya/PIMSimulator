@@ -14,8 +14,12 @@
 
 #include <iomanip>
 #include <string>
+#include <vector>
 
 #include "AddressMapping.h"
+#include "Burst.h"
+#include "PIMCmd.h"
+#include "SystemConfiguration.h"
 #include "tests/PIMCmdGen.h"
 
 void PIMKernel::runPIM()
@@ -540,6 +544,36 @@ void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row, in
     }
 }
 
+void PIMKernel::singleStep(PIMCmd command, pimBankType pb_type, int n_cycles, int in1_row, int pimreg_row) {
+    vector<PIMCmd> pim_cmds;
+    pim_cmds.push_back(PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK));
+    pim_cmds.push_back(PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_B, PIMOpdType::ODD_BANK));
+    pim_cmds.push_back(command);
+    // It turns out NOP is iterpreted as writing to the bank under certain conditions.
+    pim_cmds.push_back(PIMCmd(PIMCmdType::NOP, 8 - 1));
+    pim_cmds.push_back(PIMCmd(PIMCmdType::NOP, 8 - 1));
+    pim_cmds.push_back(PIMCmd(PIMCmdType::EXIT, 0));
+    setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
+    setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
+    parkIn();
+    changePIMMode(dramMode::SB, dramMode::HAB);
+    programCrf(pim_cmds);
+    changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
+
+    int c = num_grf_ * 0;
+    // Each fill takes 8 cycles.
+    addTransactionAll(false, 0, 0, pimreg_row, c, "BANK_TO_GRF_", &null_bst_, true, num_grf_);
+    addTransactionAll(false, 0, 1, pimreg_row, c, "BANK_TO_GRF_", &null_bst_, true, num_grf_);
+    addTransactionAll(false, 0, 0, in1_row, c, "PIM_OPERATION", &null_bst_, true, n_cycles);
+    // The write-back also takes 8 cycles. Go figure.
+    addTransactionAll(true, 0, 0, pimreg_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+    addTransactionAll(true, 0, 1, pimreg_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+
+    changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
+    changePIMMode(dramMode::HAB, dramMode::SB);
+    parkOut();
+}
+
 /*
 void PIMKernel::computeBn(int num_tile, int input0_row, int result_row)
 {
@@ -586,13 +620,23 @@ void PIMKernel::computeRelu(int num_tile, int input0_row, int result_row)
 }
 
 void PIMKernel::readData(BurstType* bst_data, size_t bst_cnt, unsigned starting_row,
-                         unsigned starting_col)
+                         unsigned starting_col, unsigned bank)
 {
-    uint64_t init_addr = pim_addr_mgr_->addrGenSafe(0, 0, 0, 0, starting_row, starting_col);
+    uint64_t init_addr = pim_addr_mgr_->addrGenSafe(0, 0, 0, bank, starting_row, starting_col);
 
     for (uint64_t addr = init_addr, i = 0; i < bst_cnt; addr += transaction_size_, i++)
     {
         mem_->addTransaction(false, addr, &bst_data[i]);
+    }
+}
+void PIMKernel::writeData(BurstType* bst_data, size_t bst_cnt, unsigned starting_row,
+    unsigned starting_col, unsigned bank)
+{
+    uint64_t init_addr = pim_addr_mgr_->addrGenSafe(0, 0, 0, bank, starting_row, starting_col);
+
+    for (uint64_t addr = init_addr, i = 0; i < bst_cnt; addr += transaction_size_, i++)
+    {
+        mem_->addTransaction(true, addr, &bst_data[i]);
     }
 }
 

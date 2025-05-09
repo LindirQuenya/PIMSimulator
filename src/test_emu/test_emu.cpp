@@ -1,0 +1,52 @@
+#include "Burst.h"
+#include "FP16.h"
+#include "PIMCmd.h"
+#include "SystemConfiguration.h"
+#include "tests/PIMKernel.h"
+
+shared_ptr<PIMKernel> pim_kernel_;
+shared_ptr<MultiChannelMemorySystem> mem_;
+
+int bst_size_;
+size_t num_channels_;
+size_t num_banks_;
+size_t num_rows_;
+size_t num_cols_;
+size_t cycle_;
+AddrMapping* addr_mapping_;
+
+int main(int argc, char* argv[]) {
+	mem_ = make_shared<MultiChannelMemorySystem>("ini/HBM2_samsung_2M_16B_x64.ini", "system_hbm.ini", ".",
+		"example_app", 2048);
+	addr_mapping_ = mem_->addrMapping;
+	pim_kernel_ = make_shared<PIMKernel>(mem_, 1, 1);
+	vector<PIMCmd> program{
+		PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
+		PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_B, PIMOpdType::GRF_B, PIMOpdType::ODD_BANK, 1)
+	};
+	BurstType data[8];
+	data[4].set(convertF2H(0));
+	data[5].set(convertF2H(0));
+	data[6].set(convertF2H(0));
+	data[7].set(convertF2H(0));
+	for (int i = 0; i < 16; i++) {
+		data[0].fp16Data_[i] = convertF2H(i);
+		data[1].fp16Data_[i] = convertF2H(16+i);
+		data[2].fp16Data_[i] = convertF2H(12+i);
+		data[3].fp16Data_[i] = convertF2H(1+i);
+	}
+
+	pim_kernel_->writeData(&data[0], 1);
+	pim_kernel_->writeData(&data[1], 1, 1);
+	pim_kernel_->writeData(&data[2], 1, 0, 0, 1);
+	pim_kernel_->writeData(&data[3], 1, 1, 0, 1);
+	pim_kernel_->singleStep(program[0], DRAMSim::pimBankType::ALL_BANK, 8, 1);
+	pim_kernel_->readData(&data[4], 1, 0);
+	pim_kernel_->readData(&data[5], 1, 0, 0, 1);
+	pim_kernel_->runPIM();
+	pim_kernel_->singleStep(program[1], DRAMSim::pimBankType::ALL_BANK, 8, 1);
+	pim_kernel_->readData(&data[6], 1, 0);
+	pim_kernel_->readData(&data[7], 1, 0, 0, 1);
+	pim_kernel_->runPIM();
+	
+}
