@@ -53,16 +53,18 @@ class GDB_SERVER(object):
         #if index <= int(15):
            # bank = "GRF_A"
         read_value = ""
-        for i  in range(32):
+        for i  in range(33):
             #read_value += str((api.read_register() ).to_bytes(4,'little'))#api function 
             #read_value += str((api.read_register()).hex())#api function --> uncomment when floats get integrated
-            read_value += f"{api.read_register(i):04x}" #api function 
+            read_value += f"{api.read_register(i):08x}" #api function 
         #print("Register {index} corresponding to {bank} is being read from is {read_value}") #tells you the bank being read from    
         return read_value #api function 
-    def read_memory(self,address):
-        mem_read = api.read_byte(address)
-        print(f"Memory Read Occurs at address {address} as {mem_read}")
-        return mem_read
+    def read_memory(self,data):
+        print(f"Memory Read Occurs at address {data['address']} with length {data['length']}")
+        builder = ""
+        for i in range(data['length']):
+            builder += f"{api.read_byte(data['address']+i):02x}"
+        return builder
     def write_memory(self,data):
         status = api.write_byte(data) #if we want to write a byte to memory
         print(f"Memory Write occured {status}")
