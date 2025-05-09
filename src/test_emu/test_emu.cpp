@@ -3,6 +3,7 @@
 #include "PIMCmd.h"
 #include "SystemConfiguration.h"
 #include "tests/PIMKernel.h"
+#include <cstring>
 
 shared_ptr<PIMKernel> pim_kernel_;
 shared_ptr<MultiChannelMemorySystem> mem_;
@@ -25,6 +26,7 @@ int main(int argc, char* argv[]) {
 		PIMCmd(PIMCmdType::ADD, PIMOpdType::GRF_B, PIMOpdType::GRF_B, PIMOpdType::ODD_BANK, 1)
 	};
 	BurstType data[8];
+	float float_view[8][16];
 	data[4].set(convertF2H(0));
 	data[5].set(convertF2H(0));
 	data[6].set(convertF2H(0));
@@ -40,13 +42,15 @@ int main(int argc, char* argv[]) {
 	pim_kernel_->writeData(&data[1], 1, 1);
 	pim_kernel_->writeData(&data[2], 1, 0, 0, 1);
 	pim_kernel_->writeData(&data[3], 1, 1, 0, 1);
-	pim_kernel_->singleStep(program[0], DRAMSim::pimBankType::ALL_BANK, 8, 1);
-	pim_kernel_->readData(&data[4], 1, 0);
-	pim_kernel_->readData(&data[5], 1, 0, 0, 1);
-	pim_kernel_->runPIM();
-	pim_kernel_->singleStep(program[1], DRAMSim::pimBankType::ALL_BANK, 8, 1);
+	pim_kernel_->multiStep(program, {1,1});
 	pim_kernel_->readData(&data[6], 1, 0);
 	pim_kernel_->readData(&data[7], 1, 0, 0, 1);
 	pim_kernel_->runPIM();
-	
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 16; j++) {
+			float_view[i][j] = convertH2F(data[i].fp16Data_[j]);
+		}
+	}
+	// Dummy line for a breakpoint.
+	float_view[0][0] = convertH2F(data[0].fp16Data_[0]);
 }

@@ -133,6 +133,20 @@ void PIMCmd::validationCheck() const
     }
 }
 
+int PIMCmd::n_cycles() const {
+    switch (type_) {
+        case PIMCmdType::FILL:
+            return 8;
+        case PIMCmdType::EXIT:
+            return 0;
+        default:
+            if (isAuto_) {
+                return 8;
+            }
+            return 1;
+    }
+}
+
 uint32_t PIMCmd::toInt() const
 {
     validationCheck();
@@ -233,19 +247,6 @@ std::string PIMCmd::toStr() const
     return ss.str();
 }
 
-void to_json(json& j, const PIMCmd& p) {
-    j = json{{"type_", p.type_},
-    {"dst_", p.dst_},
-    {"src0_", p.src0_},
-    {"src1_", p.src1_},
-    {"src2_", p.src2_},
-    {"loopCounter_", p.loopCounter_},
-    {"loopOffset_", p.loopOffset_},
-    {"isAuto_", p.isAuto_},
-    {"dstIdx_", p.dstIdx_},
-    {"src0Idx_", p.src0Idx_},
-    {"src1Idx_", p.src1Idx_},
-    {"isRelu_", p.isRelu_}};
-}
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PIMCmd, type_, dst_, src0_, src1_, src2_, loopCounter_, loopOffset_, isAuto_, dstIdx_, src0Idx_, src1Idx_, isRelu_)
 
 }  // namespace DRAMSim

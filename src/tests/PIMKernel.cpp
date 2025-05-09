@@ -544,7 +544,7 @@ void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row, in
     }
 }
 
-void PIMKernel::singleStep(PIMCmd command, pimBankType pb_type, int n_cycles, int in1_row, int pimreg_row) {
+void PIMKernel::singleStep(PIMCmd command, pimBankType pb_type, int in1_row, int pimreg_row) {
     vector<PIMCmd> pim_cmds;
     pim_cmds.push_back(PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK));
     pim_cmds.push_back(PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_B, PIMOpdType::ODD_BANK));
@@ -564,7 +564,42 @@ void PIMKernel::singleStep(PIMCmd command, pimBankType pb_type, int n_cycles, in
     // Each fill takes 8 cycles.
     addTransactionAll(false, 0, 0, pimreg_row, c, "BANK_TO_GRF_", &null_bst_, true, num_grf_);
     addTransactionAll(false, 0, 1, pimreg_row, c, "BANK_TO_GRF_", &null_bst_, true, num_grf_);
-    addTransactionAll(false, 0, 0, in1_row, c, "PIM_OPERATION", &null_bst_, true, n_cycles);
+    addTransactionAll(false, 0, 0, in1_row, c, "PIM_OPERATION", &null_bst_, true, command.n_cycles());
+    // The write-back also takes 8 cycles. Go figure.
+    addTransactionAll(true, 0, 0, pimreg_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+    addTransactionAll(true, 0, 1, pimreg_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
+
+    changePIMMode(dramMode::HAB_PIM, dramMode::HAB);
+    changePIMMode(dramMode::HAB, dramMode::SB);
+    parkOut();
+}
+void PIMKernel::multiStep(vector<PIMCmd> commands, vector<int> active_rows, pimBankType pb_type, int pimreg_row) {
+    vector<PIMCmd> pim_cmds;
+    pim_cmds.push_back(PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK));
+    pim_cmds.push_back(PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_B, PIMOpdType::ODD_BANK));
+    for (PIMCmd command : commands) {
+        pim_cmds.push_back(command);
+    }
+    // It turns out NOP is iterpreted as writing to the bank under certain conditions.
+    pim_cmds.push_back(PIMCmd(PIMCmdType::NOP, 8 - 1));
+    pim_cmds.push_back(PIMCmd(PIMCmdType::NOP, 8 - 1));
+    pim_cmds.push_back(PIMCmd(PIMCmdType::EXIT, 0));
+
+    setControl(&bst_hab_pim_, true, getToggleCond(pb_type), false, false);
+    setControl(&bst_hab_, false, getToggleCond(pb_type), false, false);
+    parkIn();
+    changePIMMode(dramMode::SB, dramMode::HAB);
+    programCrf(pim_cmds);
+    changePIMMode(dramMode::HAB, dramMode::HAB_PIM);
+
+    int c = num_grf_ * 0;
+    // Each fill takes 8 cycles.
+    addTransactionAll(false, 0, 0, pimreg_row, c, "BANK_TO_GRF_", &null_bst_, true, num_grf_);
+    addTransactionAll(false, 0, 1, pimreg_row, c, "BANK_TO_GRF_", &null_bst_, true, num_grf_);
+    for (int i = 0; i < commands.size(); i++) {
+        // For each PIM command, add the appropriate number of memory commands and ensure that they activate the right rows.
+        addTransactionAll(false, 0, 0, active_rows[i], c, commands[i].toStr(), &null_bst_, true, commands[i].n_cycles());
+    }
     // The write-back also takes 8 cycles. Go figure.
     addTransactionAll(true, 0, 0, pimreg_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);
     addTransactionAll(true, 0, 1, pimreg_row, c, "GRF_TO_BANK", &null_bst_, true, num_grf_);

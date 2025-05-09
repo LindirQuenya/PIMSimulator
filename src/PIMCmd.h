@@ -240,6 +240,7 @@ class PIMCmd
     void validationCheck() const;
     uint32_t toInt() const;
     std::string toStr() const;
+    int n_cycles() const;
 };
 
 bool operator==(const PIMCmd& lhs, const PIMCmd& rhs);
