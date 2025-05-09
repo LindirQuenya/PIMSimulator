@@ -44,29 +44,20 @@ class GDB_SERVER(object):
 
     def close_socket(self):
         self.sock.close()
-    def register_read(self):
-        return "xx"*COUNT
-        temp = []
-        for i in range(COUNT):
-            temp.append(i)
-    #code from Matsuo
-        self.hi = 0
-        self.lo = 0
-        self.bad_address = 0
-        self.cause_of_bad_address = 0
-        self.program_counter = 0x10000
-        self.temp.insert([self.hi,self.lo,self.bad_address,self.cause_of_bad_address,self.program_counter])
-        temp.to_bytes(NUMBER_OF_BYTES, byteorder='little')
-        print(F" registers printed out from 0 to {COUNT}: {temp}")
-        return temp
+    def register_read(data):
+        bank = "GRF_B"
+        if data <= 15:
+            bank = "GRF_A"
+        print("Register {data} corresponding to {bank} is being read from") #tells you the bank being read from
+        return read_register(data) #api function 
     def read_memory(self,data):
-        print("Memory Read Occurs")
-        pass
+        print(f"Memory Read Occurs at address {data}")
+        return readbyte(data)
     def write_memory(self,data):
         print("Memory Write occured")
-        reply = "E01 "
+        writebyte(data) #if we want to write a byte to memory
+        reply = "E01 " #states that things were successful in writing to memory
         return reply
-        pass
     def update_pc(self,address):
         self.program_counter = address + PC_INCREMENTOR
     def handle_continue(self,temp_addr):
@@ -89,7 +80,7 @@ class GDB_SERVER(object):
             reply = "+" + "SO5 " #specifies that a breakpoint is getting handled
         elif command == "g" or command == "G": #register access
             print("Register Reads Initiated \n")
-            temp_reply = self.register_read()
+            temp_reply = self.register_read(data)
             reply = str(temp_reply)
         elif command == "c": #continue command
             print("Continue Command Initiated\n")
