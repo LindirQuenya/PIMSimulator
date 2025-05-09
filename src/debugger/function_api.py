@@ -2,11 +2,11 @@
 
 
 def read_register(index):
-    return 108
+    return index
 
 
 def read_byte(address):
-    return 9
+    return address & 0xFF
 
 def write_byte(address):
     if address:

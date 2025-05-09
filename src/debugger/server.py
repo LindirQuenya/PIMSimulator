@@ -7,6 +7,10 @@ COUNT = 16
 NUMBER_OF_BYTES = COUNT
 brk_pnt_reply = "+SO5 "
 PC_INCREMENTOR = 4
+
+def reverse_bytes(s):
+    return "".join([s[x:x+2] for x in range(0,len(s),2)][::-1])
+
 def test():
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as s:
         test_server = GDB_SERVER(s)
@@ -15,12 +19,13 @@ def test():
 class GDB_SERVER(object):
     def __init__(self, sock):
         self.sock = sock
-        port = input("GDB Socket Port Target:")
-        port = int(port)
+#        port = input("GDB Socket Port Target:")
+#        port = int(port)
+        port = 11111
         # Unsure if this is correct, but trying it out!
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.settimeout(15)
+        self.sock.settimeout(150)
         self.sock.bind(("127.0.0.1", port)) #used socket documentation
         self.stage = 0
         #self.data = " "
@@ -56,7 +61,7 @@ class GDB_SERVER(object):
         for i  in range(33):
             #read_value += str((api.read_register() ).to_bytes(4,'little'))#api function 
             #read_value += str((api.read_register()).hex())#api function --> uncomment when floats get integrated
-            read_value += f"{api.read_register(i):08x}" #api function 
+            read_value += reverse_bytes(f"{api.read_register(i):08x}") #api function 
         #print("Register {index} corresponding to {bank} is being read from is {read_value}") #tells you the bank being read from    
         return read_value #api function 
     def read_memory(self,data):
