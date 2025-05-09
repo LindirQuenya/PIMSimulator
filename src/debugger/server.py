@@ -1,3 +1,4 @@
+#set architecture riscv:rv32
 import socket
 import signal #for hanlding an interrupt to end gdb server
 import json
@@ -45,12 +46,18 @@ class GDB_SERVER(object):
 
     def close_socket(self):
         self.sock.close()
-    def register_read(index):
-        bank = "GRF_B"
-        if index <= 15:
-            bank = "GRF_A"
-        read_value = api.read_register(index) #api function 
-        print("Register {index} corresponding to {bank} is being read from is {read_value}") #tells you the bank being read from
+    def register_read(self,index):
+        print(index) 
+        #PROVES PROOF OF CONCEPT FOR THE FUNCTION API WORKING
+        #bank = "GRF_B or GRF_A"
+        #if index <= int(15):
+           # bank = "GRF_A"
+        read_value = ""
+        for i  in range(32):
+            #read_value += str((api.read_register() ).to_bytes(4,'little'))#api function 
+            #read_value += str((api.read_register()).hex())#api function --> uncomment when floats get integrated
+            read_value += f"{api.read_register(i):04x}" #api function 
+        #print("Register {index} corresponding to {bank} is being read from is {read_value}") #tells you the bank being read from    
         return read_value #api function 
     def read_memory(self,address):
         mem_read = api.read_byte(address)
