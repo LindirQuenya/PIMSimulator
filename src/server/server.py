@@ -128,7 +128,19 @@ class GDB_SERVER(object):
         print(F"step over --> increment the address value to now be: {self.program_counter}")
         return brk_pnt_reply
     
+    def set_breakpoint(self, program_location):
+        print("Preparing to set a breakpoint at {program_location}")
+        address_set = api.set_breakpoint(program_location)
+        if address_set == "Success":
+            print("Breakpoint successfully set at {address_set}")
+        return address_set
+
     
+
+    def delete_breakpoint(self,breakpoint_location):
+        print("Deleting Breakpoint at {breakpoint_location}")
+        deleted = api.delete_breakpoint(breakpoint_location)
+        print("Breakpoint deleted {deleted}")
     
     def intermediate_step(self,command,data):
         print(f"<-:{command}")
@@ -159,6 +171,12 @@ class GDB_SERVER(object):
                 reply = self.read_memory(data)
             else:
                 reply = self.write_memory(data)
+        elif command == 'Z' or command == "Z":
+            breakpoint_location = data['breakpoint']
+            if command == "Z":
+                reply = self.set_breakpoint(breakpoint)
+            else:
+                reply = self.delete_breakpoint(breakpoint_location)
         else:
             status = "NOT OKAY"
             print("Command is not supported... Please check for the next update")

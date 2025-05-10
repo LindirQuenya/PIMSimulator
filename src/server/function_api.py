@@ -15,3 +15,8 @@ def write_byte(address,data):
         return "Success"
 def write_register(register,data):
     return "Success"
+def set_breakpoint(pc):
+    return "Success"
+   
+def delete_breakpoint(pc):
+    return "Success"
