@@ -114,19 +114,19 @@ class GDB_SERVER(object):
     
     
     
-    def handle_continue(self,temp_addr):
-        address = int(temp_addr)
-        self.update_pc(address)
-        print(F"continue onwards --> increment the address value to now be: {self.program_counter}")
-        return brk_pnt_reply
+    def handle_continue(self):
+        print(f"Starting Execution")
+        api.execute()
+        print(f"Execution Completed")
+        return "Success"
     
     
     
-    def handle_step(self,temp_addr):
-        address = int(temp_addr)
-        self.update_pc(address)
-        print(F"step over --> increment the address value to now be: {self.program_counter}")
-        return brk_pnt_reply
+    def handle_step(self):
+        print(F"Preparing for Single Step")
+        api.single_step()
+        print("Single Step has Occurred")
+        return "Success"
     
     def set_breakpoint(self, program_location):
         print("Preparing to set a breakpoint at {program_location}")
@@ -141,10 +141,12 @@ class GDB_SERVER(object):
         print("Deleting Breakpoint at {breakpoint_location}")
         deleted = api.delete_breakpoint(breakpoint_location)
         print("Breakpoint deleted {deleted}")
+        return deleted
     
     def intermediate_step(self,command,data):
         print(f"<-:{command}")
         status = "ok"
+        reply = ""
         if command == "+":
             return
         if command == "?":
@@ -161,10 +163,10 @@ class GDB_SERVER(object):
                 reply = temp_reply
         elif command == "c": #continue command
             print("Continue Command Initiated\n")
-            reply = self.handle_step(command)
+            reply = self.handle_continue(command)
         elif command == "s": #step command
             print("STEP Command initiated\n")
-            reply = self.handle_continue(command)
+            reply = self.handle_step()
         elif command == "m" or command == "M": #memory access
             print("Memory access initiated") 
             if command == 'm':
