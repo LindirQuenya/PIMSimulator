@@ -6,6 +6,20 @@
 	"configurations": [
 		{
 			"type": "lldb",
+			"request": "attach",
+			"name": "Attach",
+			"program": "${workspaceFolder}/../pimsim_env/bin/python3",
+			"pid": "${command:pickMyProcess}" // use ${command:pickProcess} to pick other users' processes
+		},
+		{
+			"name": "Python API test",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/test.py",
+			"console": "integratedTerminal"
+		},
+		{
+			"type": "lldb",
 			"request": "launch",
 			"name": "emutest",
 			"program": "${workspaceFolder}/emutest",

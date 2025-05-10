@@ -544,7 +544,7 @@ void PIMKernel::computeAddOrMul(int num_tile, int input0_row, int result_row, in
     }
 }
 
-void PIMKernel::singleStep(PIMCmd command, pimBankType pb_type, int in1_row, int pimreg_row) {
+void PIMKernel::singleStep(PIMCmd command, int in1_row, pimBankType pb_type, int pimreg_row) {
     vector<PIMCmd> pim_cmds;
     pim_cmds.push_back(PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK));
     pim_cmds.push_back(PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_B, PIMOpdType::ODD_BANK));

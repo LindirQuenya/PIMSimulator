@@ -1,0 +1,53 @@
+[
+  {
+    "cmd": {
+        "dstIdx_": 0,
+        "dst_": "GRF_A",
+        "isAuto_": 1,
+        "isRelu_": 0,
+        "loopCounter_": 0,
+        "loopOffset_": 0,
+        "src0Idx_": 0,
+        "src0_": "GRF_A",
+        "src1Idx_": 0,
+        "src1_": "EVEN_BANK",
+        "src2_": "A_OUT",
+        "type_": "ADD"
+      },
+    "row": 1
+  },
+  {
+    "cmd": {
+        "dstIdx_": 0,
+        "dst_": "GRF_B",
+        "isAuto_": 1,
+        "isRelu_": 28847,
+        "loopCounter_": 0,
+        "loopOffset_": 0,
+        "src0Idx_": 0,
+        "src0_": "GRF_B",
+        "src1Idx_": 0,
+        "src1_": "ODD_BANK",
+        "src2_": "A_OUT",
+        "type_": "ADD"
+    },
+    "row": 1
+  },
+  {
+    "cmd": {
+        "dstIdx_": 0,
+        "dst_": "GRF_A",
+        "isAuto_": 1,
+        "isRelu_": 0,
+        "loopCounter_": 0,
+        "loopOffset_": 0,
+        "src0Idx_": 0,
+        "src0_": "GRF_A",
+        "src1Idx_": 0,
+        "src1_": "EVEN_BANK",
+        "src2_": "A_OUT",
+        "type_": "ADD"
+      },
+    "row": 1
+  }
+]
