@@ -12,6 +12,12 @@ def reverse_bytes(s):
     return "".join([s[x:x+2] for x in range(0,len(s),2)][::-1])
 def reverse_bytes_memory(s):
     return "".join([s[x:x+1] for x in range(0,len(s),1)][::-1])
+def extract_data(register_collection, register_number):
+    temp_string = ""
+    for i in range(4):
+        temp_string += f"{register_collection[(register_number*4)+i]:02x}" #took inspiration from the register read
+    register_value = reverse_bytes(temp_string)
+    return int(register_value,16) #convert from hexadecimal back to decimal
 def test():
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as s:
         test_server = GDB_SERVER(s)
@@ -32,6 +38,7 @@ class GDB_SERVER(object):
         #self.data = " "
         self.sock.listen(2)
         self.conn, self.addr = self.sock.accept()
+
     def receiver(self):
         data = self.data
         try:
@@ -44,6 +51,8 @@ class GDB_SERVER(object):
         print("Data received:")
         print(data)  
         self.stage = 1     
+    
+    
     def continuous_send(self):
         data = self.sock.recv()
         if  "<-:" in data:
@@ -52,6 +61,9 @@ class GDB_SERVER(object):
 
     def close_socket(self):
         self.sock.close()
+   
+   
+   
     def register_read(self,index):
         print(index) 
         #PROVES PROOF OF CONCEPT FOR THE FUNCTION API WORKING
@@ -65,6 +77,10 @@ class GDB_SERVER(object):
             read_value += reverse_bytes(f"{api.read_register(i):08x}") #api function 
         #print("Register {index} corresponding to {bank} is being read from is {read_value}") #tells you the bank being read from    
         return read_value #api function 
+    
+    
+    
+    
     def read_memory(self,data):
         print(f"Memory Read Occurs at address {data['address']} with length {data['length']}")
         builder = ""
@@ -72,28 +88,48 @@ class GDB_SERVER(object):
             builder += f"{api.read_byte(data['address']+i):02x}"
         builder1 = reverse_bytes_memory(builder)
         return builder1
+    
+    
+    
     def write_memory(self,data):
         status = api.write_byte(data['address'],data['value']) #if we want to write a byte to memory
         print(f"Memory Write occured {status}")
         reply = "OK" #states that things were successful in writing to memory
         return reply
+    
+
+
+
+
+    def register_write(self,data):
+        reply = ""
+        for i in range(33):
+            register_number = (extract_data(data['data'],i))
+            print(f"Register {i} contains {register_number}")
+            reply = api.write_register(i,register_number)
+        return reply
+    
     def update_pc(self,address):
         self.program_counter = address + PC_INCREMENTOR
+    
+    
+    
     def handle_continue(self,temp_addr):
         address = int(temp_addr)
         self.update_pc(address)
         print(F"continue onwards --> increment the address value to now be: {self.program_counter}")
         return brk_pnt_reply
+    
+    
+    
     def handle_step(self,temp_addr):
         address = int(temp_addr)
         self.update_pc(address)
         print(F"step over --> increment the address value to now be: {self.program_counter}")
         return brk_pnt_reply
-    def register_write(self,data):
-        reply = ""
-        for i in range(33):
-            reply = api.write_register((data['register']+i),(data['value']+i))
-        return reply
+    
+    
+    
     def intermediate_step(self,command,data):
         print(f"<-:{command}")
         status = "ok"
@@ -106,11 +142,11 @@ class GDB_SERVER(object):
             if command == "g":
                 print("Register Reads Initiated \n")
                 temp_reply = self.register_read(data)
-                return str(temp_reply)
+                reply = str(temp_reply)
             else:
-                print("Register Write Initiated")
+                print("Writing to Registers")
                 temp_reply = self.register_write(data)
-                return str(temp_reply)
+                reply = temp_reply
         elif command == "c": #continue command
             print("Continue Command Initiated\n")
             reply = self.handle_step(command)
@@ -130,6 +166,9 @@ class GDB_SERVER(object):
         print(f"->:{reply} & {status}")
         transmit_information = {"status":status , "data":reply}
         return transmit_information
+    
+    
+    
     def parser(self):
         temp_data = self.conn.recv(4096).decode()
         print(f"Data received over socket: {temp_data}")
