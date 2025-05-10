@@ -29,13 +29,11 @@ class GDB_SERVER(object):
 #        port = input("GDB Socket Port Target:")
 #        port = int(port)
         port = 11111
-        # Unsure if this is correct, but trying it out!
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.settimeout(150)
         self.sock.bind(("127.0.0.1", port)) #used socket documentation
         self.stage = 0
-        #self.data = " "
         self.sock.listen(2)
         self.conn, self.addr = self.sock.accept()
 
@@ -66,17 +64,11 @@ class GDB_SERVER(object):
    
     def register_read(self,index):
         print(index) 
-        #PROVES PROOF OF CONCEPT FOR THE FUNCTION API WORKING
-        #bank = "GRF_B or GRF_A"
-        #if index <= int(15):
-           # bank = "GRF_A"
         read_value = ""
         for i  in range(33):
-            #read_value += str((api.read_register() ).to_bytes(4,'little'))#api function 
             #read_value += str((api.read_register()).hex())#api function --> uncomment when floats get integrated
             read_value += reverse_bytes(f"{api.read_register(i):08x}") #api function 
-        #print("Register {index} corresponding to {bank} is being read from is {read_value}") #tells you the bank being read from    
-        return read_value #api function 
+        return read_value 
     
     
     
@@ -108,11 +100,7 @@ class GDB_SERVER(object):
             print(f"Register {i} contains {register_number}")
             reply = api.write_register(i,register_number)
         return reply
-    
-    def update_pc(self,address):
-        self.program_counter = address + PC_INCREMENTOR
-    
-    
+        
     
     def handle_continue(self):
         print(f"Starting Execution")
@@ -192,7 +180,6 @@ class GDB_SERVER(object):
     def parser(self):
         temp_data = self.conn.recv(4096).decode()
         print(f"Data received over socket: {temp_data}")
-        #temp_json_data = json.dumps(temp_data) #if it fails, take this line and the next line out
         json_data = json.loads(temp_data)
         print(f"JSON Dumps: {json_data}")
         command =  json_data.get("type")
