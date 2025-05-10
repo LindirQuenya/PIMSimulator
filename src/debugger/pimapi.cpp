@@ -70,6 +70,7 @@ void executeprogram(void) {
 		rows.push_back(program[i].row);
 	}
 	pim_kernel_->multiStep(commands, rows, PIM_PBTYPE, PIM_REG_ROW);
+	read_reg_burst();
 	pim_kernel_->runPIM();
 	PC = i;
 }
@@ -87,6 +88,8 @@ void singlestep(void) {
 		return;
 	}
 	pim_kernel_->singleStep(program[PC].cmd, program[PC].row, PIM_PBTYPE, PIM_REG_ROW);
+	read_reg_burst();
+	pim_kernel_->runPIM();
 	PC++;
 }
 
