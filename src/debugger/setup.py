@@ -8,7 +8,7 @@ setup(
 #            library_dirs=["lib"],
 #            libraries=["dramsim2"],
             include_dirs=["../", "../../lib"],
-            extra_objects=["build/libdramsim2.a"],
+            extra_objects=["../../libdramsim/libdramsim2.a"],
             extra_compile_args=['-std=c++20'],
         ),
     ]
