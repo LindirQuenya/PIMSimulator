@@ -144,67 +144,50 @@ sudo apt install libgtest-dev
 ```
 
 ### 3.2 Installing
-* To Install PIMSimulator:
+* To compile PIMSimulator:
 ```bash
 # compile
 scons
+
+# create python venv
+python3 -m venv pimsim_env
+source pimsim_env/bin/activate
+# install numpy to help with float16 conversions
+pip install numpy
+
+# build python interface library
+pushd src/debugger
+pip install --editable .
+popd
 ```
 
 ### 3.3 Launch a Test Run
-* Show a list of test cases
-```bash
-./sim --gtest_list_tests
-
-# Example
-PIMKernelFixture.
-  gemv_tree
-  gemv
-  mul
-  add
-  relu
-MemBandwidthFixture.
-  hbm_read_bandwidth
-  hbm_write_bandwidth
-PIMBenchFixture.
-  gemv
-  mul
-  add
-  relu
+```python
+from test import *            # Load program, setup memory with dummy values.
+read_grf(False)               # Read GRF_A
+read_grf(True)                # Read GRF_B
+read_memgrf(1, 0)             # Read row 1, bank 0 (even)
+read_memgrf(1, 1)             # Read row 1, bank 1 (odd)
+pimsim.read_register(32)      # Read PC (index into program), which starts out at 0
+pimsim.single_step()          # First instruction: GRF_A += EVEN_BANK
+pimsim.read_register(32)      # Read PC
+read_grf(False)               # Read GRF_A
+pimsim.set_breakpoint(2)      # Next instruction: GRF_B += ODD_BANK
+pimsim.execute()              # Continue execution
+pimsim.read_register(32)      # Read PC
+read_grf(True)                # Read GRF_B
+pimsim.execute()              # Execute last instruction, GRF_A *= EVEN_BANK
+pimsim.read_register(32)      # Read PC
+read_grf(False)               # Read GRF_A
+pimsim.write_register(32, 1)  # Set PC = 1
+pimsim.read_register(32)      # Read PC
+pimsim.single_step()          # Next instruction: GRF_B += ODD_BANK
+pimsim.read_register(32)      # Read PC
+read_grf(True)                # Read GRF_B
 ```
+### 3.4 Debugger Interface
+Currently, the only supported interface is through the python API. We had worked on creating an interface that could act as a GDB serial protocol server, but that ran into some unfortunate bugs. Perhaps you can fix them. To be honest, we ran out of time to get that sufficiently polished.
 
-* Test Running
-```bash
-# Running: functionality test (GEMV)
-./sim --gtest_filter=PIMKernelFixture.gemv
-
-# Running: functionality test (MUL)
-./sim --gtest_filter=PIMKernelFixture.mul
-
-# Running: performance test (GEMV)
-./sim --gtest_filter=PIMBenchFixture.gemv
-
-# Running: performance test (ADD)
-./sim --gtest_filter=PIMBenchFixture.add
-```
-
-If you want to functionality test for other dimensions, generate a new dimension in `./data`
-and add generated dimension to the source of `src/tests/KernelTestCases.cpp`.
-Use the gen script in `./data` to generate data of the dimension to be changed.
-
-### 3.4 Configuration
-
-#### Turning on/off verbose mode
-* You can select what kinds of log you want to see by modifying system_*.ini
-
-#### Turning on/off data mode
-* Data mode
-  * build without -DNO_STORAGE option
-* No-data mode
-  * build with -DNO_STORAGE option
-```bash
-# build to No-data mode
-scons NO_STORAGE=1
-```
 
 ## 4 Programming Guide
 Highly recommend you to refer to `src/tests/*` (especially, `src/tests/PIMKernel.cpp` and `src/tests/PIMBenchTestCases.cpp`)

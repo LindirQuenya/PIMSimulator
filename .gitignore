@@ -39,3 +39,7 @@ tags
 .sconsign.dblite
 bin
 
+compile_commands.json
+.cache
+__pycache__
+emutest

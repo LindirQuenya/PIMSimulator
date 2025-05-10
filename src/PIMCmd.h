@@ -16,9 +16,12 @@
 #include <bitset>
 #include <iostream>
 #include <sstream>
+#include <cstdint>
 #include <string>
+#include <json.hpp>
 
 using namespace std;
+using json = nlohmann::json;
 
 namespace DRAMSim
 {
@@ -53,6 +56,8 @@ enum class PIMOpdType
     SRF_M,
     SRF_A
 };
+
+PIMCmdType CmdFromString(char *s);
 
 class PIMCmd
 {
@@ -180,7 +185,7 @@ class PIMCmd
         return ((val >> bit_pos) & bitmask(bit_len));
     }
 
-    std::string opdToStr(PIMOpdType opd, int idx = 0) const
+    static std::string opdToStr(PIMOpdType opd, int idx = 0)
     {
         switch (opd)
         {
@@ -205,9 +210,9 @@ class PIMCmd
         }
     }
 
-    std::string cmdToStr(PIMCmdType type) const
+    static std::string cmdToStr(PIMCmdType type)
     {
-        switch (type_)
+        switch (type)
         {
             case PIMCmdType::EXIT:
                 return "EXIT";
@@ -236,10 +241,41 @@ class PIMCmd
     void validationCheck() const;
     uint32_t toInt() const;
     std::string toStr() const;
+    int n_cycles() const;
 };
 
 bool operator==(const PIMCmd& lhs, const PIMCmd& rhs);
 bool operator!=(const PIMCmd& lhs, const PIMCmd& rhs);
+NLOHMANN_JSON_SERIALIZE_ENUM( PIMCmdType, {
+    {PIMCmdType::NOP, "NOP"},
+    {PIMCmdType::ADD, "ADD"},
+    {PIMCmdType::MUL, "MUL"},
+    {PIMCmdType::MAC, "MAC"},
+    {PIMCmdType::MAD, "MAD"},
+    {PIMCmdType::REV0, "REV0"},
+    {PIMCmdType::REV1, "REV1"},
+    {PIMCmdType::REV2, "REV2"},
+    {PIMCmdType::MOV, "MOV"},
+    {PIMCmdType::FILL, "FILL"},
+    {PIMCmdType::REV3, "REV3"},
+    {PIMCmdType::REV4, "REV4"},
+    {PIMCmdType::REV5, "REV5"},
+    {PIMCmdType::REV6, "REV6"},
+    {PIMCmdType::JUMP, "JUMP"},
+    {PIMCmdType::EXIT, "EXIT"}
+})
+
+NLOHMANN_JSON_SERIALIZE_ENUM( PIMOpdType, {
+    {PIMOpdType::A_OUT, "A_OUT"},
+    {PIMOpdType::M_OUT, "M_OUT"},
+    {PIMOpdType::EVEN_BANK, "EVEN_BANK"},
+    {PIMOpdType::ODD_BANK, "ODD_BANK"},
+    {PIMOpdType::GRF_A, "GRF_A"},
+    {PIMOpdType::GRF_B, "GRF_B"},
+    {PIMOpdType::SRF_M, "SRF_M"},
+    {PIMOpdType::SRF_A, "SRF_A"}
+})
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PIMCmd, type_, dst_, src0_, src1_, src2_, loopCounter_, loopOffset_, isAuto_, dstIdx_, src0Idx_, src1Idx_, isRelu_)
 
 }  // namespace DRAMSim
 #endif

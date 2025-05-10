@@ -1,0 +1,32 @@
+[
+  {
+    "cmd": {
+        "dst_": "GRF_A",
+        "isAuto_": 1,
+        "src0_": "GRF_A",
+        "src1_": "EVEN_BANK",
+        "type_": "ADD"
+      },
+    "row": 1
+  },
+  {
+    "cmd": {
+        "dst_": "GRF_B",
+        "isAuto_": 1,
+        "src0_": "GRF_B",
+        "src1_": "ODD_BANK",
+        "type_": "ADD"
+    },
+    "row": 1
+  },
+  {
+    "cmd": {
+        "dst_": "GRF_A",
+        "isAuto_": 1,
+        "src0_": "GRF_A",
+        "src1_": "EVEN_BANK",
+        "type_": "MUL"
+      },
+    "row": 1
+  }
+]

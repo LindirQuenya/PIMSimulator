@@ -11,9 +11,16 @@
  **************************************************************************************************/
 
 #include "PIMCmd.h"
+#include <stdexcept>
+#include <string>
+#include "json.hpp"
+
+using json = nlohmann::json;
+using namespace nlohmann::literals;
 
 namespace DRAMSim
 {
+
 bool operator==(const PIMCmd& lhs, const PIMCmd& rhs)
 {
     return lhs.toInt() == rhs.toInt();
@@ -94,6 +101,20 @@ void PIMCmd::validationCheck() const
            }
            }
          */
+    }
+}
+
+int PIMCmd::n_cycles() const {
+    switch (type_) {
+        case PIMCmdType::FILL:
+            return 8;
+        case PIMCmdType::EXIT:
+            return 0;
+        default:
+            if (isAuto_) {
+                return 8;
+            }
+            return 1;
     }
 }
 
@@ -196,4 +217,5 @@ std::string PIMCmd::toStr() const
     }
     return ss.str();
 }
+
 }  // namespace DRAMSim

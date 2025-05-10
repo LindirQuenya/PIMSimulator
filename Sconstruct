@@ -24,6 +24,11 @@ def getSources(target):
         if int(en_emul) != 1:
             build_sources += Glob(joinpath(base_path["tools_build"], "*/*.cpp"))
         sources = build_sources
+    if (target == "emutest"):
+        build_sources = (Glob(joinpath(base_path["build"], "*.cpp")) +
+                         Glob(joinpath(base_path["build"], "test_emu/*.cpp")) +
+                         Glob(joinpath(base_path["build"], "tests/*.cpp"), exclude=joinpath(base_path["build"], "tests/MainTest.cpp")))
+        sources = build_sources
     elif (target == "lib"):
         lib_sources = Glob(joinpath(base_path["build"], "*.cpp"))
         lib_sources += Glob(joinpath(base_path["build"], "tests/PIMCmdGen.cpp"))
@@ -38,6 +43,8 @@ def getSources(target):
 def build(target_name, base_path, build_flags):
     # setup the default build envronments
     env = Environment()
+    env.Tool('compilation_db')
+    env.CompilationDatabase()
 
     env.Append(CXXFLAGS=build_flags["CXXFLAGS"] + build_flags["gprof_option"])
     env.Append(LINKFLAGS=build_flags["LINKFLAGS"] + build_flags["gprof_option"])
@@ -69,11 +76,18 @@ def build(target_name, base_path, build_flags):
                           LIBPATH=['.'],
                           LIBS=['gtest', 'pthread'])
 
+    emutest_sources = getSources("emutest")
+    env.Program(target=target_name["emutest"],
+                source=emutest_sources,
+                CPPPATH=[base_path["lib"], base_path["source"], base_path["tools"]],
+                LIBPATH=['.'], LIBS=['gtest', 'pthread'])
+
 
 root_path = Dir('.').abspath
 
 target_name = {
     "binary": 'sim',
+    "emutest": "emutest",
     "library": './libdramsim/dramsim2',
 }
 
@@ -88,8 +102,8 @@ base_path = {
 
 build_flags = {
     "gprof_option": '',
-    "CXXFLAGS": '-g -O2 -std=c++14 -Wall -Wno-reorder -Wno-sign-compare',
-    "LINKFLAGS": '-g -O2 -std=c++14 -Wall -Wno-reorder -Wno-sign-compare',
+    "CXXFLAGS": '-g -Og -std=c++20 -Wall -Wno-reorder -Wno-sign-compare -fPIC',
+    "LINKFLAGS": '-g -Og -std=c++20 -Wall -Wno-reorder -Wno-sign-compare -fPIC',
 }
 
 setNumJobs()
