@@ -2,7 +2,8 @@
 import socket
 import signal #for hanlding an interrupt to end gdb server
 import json
-import function_api as api
+#import function_api as api
+import pimsim as api
 COUNT = 16
 NUMBER_OF_BYTES = COUNT
 brk_pnt_reply = "+SO5 "
@@ -117,18 +118,18 @@ class GDB_SERVER(object):
         return "Success"
     
     def set_breakpoint(self, program_location):
-        print("Preparing to set a breakpoint at {program_location}")
+        print(f"Preparing to set a breakpoint at {program_location}")
         address_set = api.set_breakpoint(program_location)
         if address_set == "Success":
-            print("Breakpoint successfully set at {address_set}")
+            print(f"Breakpoint successfully set at {address_set}")
         return address_set
 
     
 
     def delete_breakpoint(self,breakpoint_location):
-        print("Deleting Breakpoint at {breakpoint_location}")
-        deleted = api.delete_breakpoint(breakpoint_location)
-        print("Breakpoint deleted {deleted}")
+        print(f"Deleting Breakpoint at {breakpoint_location}")
+        api.delete_breakpoint(breakpoint_location)
+        print(f"Breakpoint deleted {deleted}")
         return deleted
     
     def intermediate_step(self,command,data):
@@ -164,7 +165,7 @@ class GDB_SERVER(object):
         elif command == 'Z' or command == "Z":
             breakpoint_location = data['breakpoint']
             if command == "Z":
-                reply = self.set_breakpoint(breakpoint)
+                reply = self.set_breakpoint(breakpoint_location)
             else:
                 reply = self.delete_breakpoint(breakpoint_location)
         else:
